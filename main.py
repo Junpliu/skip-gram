@@ -53,7 +53,7 @@ if __name__ == '__main__':
                  embedding_dims=200,
                  window_size=5,
                  neg_sample_cnt=10,
-                 epoch_num=15,
+                 epoch_num=100,
                  batch_size=16,
                  lr=0.2)
     wc.train()
