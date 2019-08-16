@@ -9,15 +9,15 @@ class dataset():
         self.neg_sample_cnt = neg_sample_cnt
         with open(filepath, 'r') as f:
             words = f.read().split()# 17005207 words
-        print('former count of words in words lst:', len(set(words)))
+        #print('former count of words in words lst:', len(set(words)))
         words_idx_lst, words_counts = self.create_vocab(words, vocab_size)
-        for idx in range(10):
-            print(words_counts[idx])
-        print('all words lst len:', len(words_idx_lst))
-        print('the size of the dictionary of words index lst:', len(set(words_idx_lst)))
+        # for idx in range(10):
+        #     print(words_counts[idx])
+        # print('all words lst len:', len(words_idx_lst))
+        # print('the size of the dictionary of words index lst:', len(set(words_idx_lst)))
         sampled_words_idx_lst = self.subsampling(words_idx_lst, words_counts)
-        print('sampled words lst len:', len(sampled_words_idx_lst))
-        print('the size of the new dictionary for sampled words lst:', len(set(sampled_words_idx_lst)))
+        # print('sampled words lst len:', len(sampled_words_idx_lst))
+        # print('the size of the new dictionary for sampled words lst:', len(set(sampled_words_idx_lst)))
         self.build_dataset(sampled_words_idx_lst)
         self.sampling_table = self.create_sampling_table(words_counts)
 
@@ -51,7 +51,7 @@ class dataset():
         self.words_len = len(words_idx)
         # after calculation: the number of pairs is (2*len-1)*window_size-window_size*window_size
         self.dataitems_len = (2*self.words_len-1)*self.window_size-self.window_size*self.window_size
-        print('self.dataitems_len = ', self.dataitems_len)
+        # print('self.dataitems_len = ', self.dataitems_len)
         self.trainingpairs = torch.LongTensor(self.dataitems_len, 2)
         cur_idx = 0
         flag = False
