@@ -55,6 +55,8 @@ class word2vec:
             print('test only, load checkpoint from ' + self.checkpoint)
             checkpoint = torch.load('checkpoints/' + self.checkpoint)
             self.model.load_state_dict(checkpoint['state_dict'])
+            word2idx_dict = torch.load('word2idx.dict')
+            self.word2idx = word2idx_dict['word2idx']
 
     def train(self):
         print('processing data')
@@ -177,7 +179,7 @@ class word2vec:
                                './checkpoints/chinese/epoch{}'.format(epoch, batch_num, self.lr))
         print("Optimization Finished!")
 
-    def wordsim(self):
+    def wordsim(self): #
         case_cnt = 0
         rho_a = []
         rho_b = []
@@ -197,8 +199,8 @@ class word2vec:
                     rho_b.append((float(items[2])))
         return pearsonr(np.array(rho_a), np.array(rho_b))
 
-    def syntactic(self):  # 0.1684105630293971
-        def find_nearest_cosine(input):  # return the index of the nearest vector
+    def syntactic(self, ques_file, answ_file):  # 0.1684105630293971
+        def _find_nearest_cosine(input):  # return the index of the nearest vector
             norm_input = input / np.sqrt(np.sum(input * input))
             # print('norm_a', norm_input)
             norm_embed = word_embeddings / np.repeat(np.sqrt(np.sum(word_embeddings * word_embeddings, axis=1)), self.embedding_dim).reshape(self.vocabulary_size, self.embedding_dim)
@@ -209,33 +211,28 @@ class word2vec:
 
         word_embeddings = self.model.input_embeddings()
         if self.test_only:
-            ch = torch.load('word2idx.dict')
+            ch = torch.load('word2idx.dict')  # the dictionary of english corpus
             word2idx = ch['word2idx']
         else:
             word2idx = self.word2idx
         valid = 0
         invalid = 0
-        with open('evaluation/syntactic_question/word_relationship.questions', 'r') as f:
+        with open(ques_file, 'r') as f:
             question_lines = f.read().split('\n')
-        with open('evaluation/syntactic_question/word_relationship.questions', 'r') as f:
+        with open(answ_file, 'r') as f:
             answers_lines = f.read().split('\n')
         cor_cnt = 0
         for i in range(len(question_lines)):
             ques_items = question_lines[i].split()
             ans_items = answers_lines[i].split()
-            if ques_items[0] in word2idx and ques_items[1] in word2idx and ques_items[2] in word2idx:  # a - b = c - d
+            if ques_items[0] in word2idx and ques_items[1] in word2idx and ques_items[2] in word2idx and ans_items[1] in word2idx:  # a - b = c - d
                 valid += 1
                 if valid % 500 == 0:
                     print('processing idx: ', valid, 'current accuracy = ', cor_cnt / valid)
                 a = word_embeddings[self.word2idx[ques_items[0]]]
                 b = word_embeddings[self.word2idx[ques_items[1]]]
                 c = word_embeddings[self.word2idx[ques_items[2]]]
-                # print(a[:10])
-                # print(b[:10])
-                # print(c[:10])
-                # print((b + c - a)[:10])
-                # input()
-                output_idx = find_nearest_cosine(b + c - a)
+                output_idx = _find_nearest_cosine(b + c - a)
                 if output_idx == self.word2idx[ans_items[1]]:
                     cor_cnt += 1
             else:
@@ -243,6 +240,9 @@ class word2vec:
                 # print(ques_items[0], ques_items[1], ques_items[2])
         print('valid = ', valid, 'invalid = ', invalid)
         return cor_cnt / valid
+
+    def semantic(self, ques_file, answ_file):
+        return self.syntactic(ques_file, answ_file)
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -265,4 +265,5 @@ if __name__ == '__main__':
     if not args.testonly:
         wc.train()
     else:
-        print('syntactic accuracy = ', wc.syntactic())
+        # print('syntactic accuracy = ', wc.syntactic('evaluation/syntactic_question/word_relationship.questions', 'evaluation/syntactic_question/word_relationship.questions'))
+        print('syntactic accuracy = ', wc.semantic('evaluation/Semantic_questions/semevalQuestion.txt', 'evaluation/Semantic_questions/semevalAnswer.txt'))

@@ -154,3 +154,4 @@ class Options(object):
                 pos_u.append(labels[i])
         neg_v = np.random.choice(self.sampling_table, size=(batch_size * 2 * window_size, count))
         return np.array(pos_u), np.array(pos_v), neg_v
+#

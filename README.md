@@ -19,7 +19,7 @@ The results of english text are as follow, the chinese word vectors are still be
 | :---:   | :-----:  | :----:  |
 |   word relatedness    |  69.88%  |   69.36%     |
 |  syntactic question   |   16.84%   |   54.24%   |
-| semantic question     |        |  15.59%  |
+| semantic question     |    9.59%   |  45.59%  |
 
 ## References
 [**Mikolov, Tomas, et al. "Distributed representations of words and phrases and their compositionality." Advances in neural information processing systems. 2013.**](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf)
