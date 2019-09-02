@@ -5,7 +5,7 @@ import time
 import os
 from scipy.stats import pearsonr
 import numpy as np
-from getData import Options, scorefunction
+from getData import Options
 from model import skipgram
 
 
@@ -132,10 +132,9 @@ class word2vec:
                     end = time.time()
                     if self.language == 'english':
                         word_embeddings = self.model.input_embeddings()
-                        sp1, sp2 = scorefunction(word_embeddings)
                         p1, p2 = self.wordsim()
-                        print('epoch,batch={:2d} {}:  pearsonr={:1.3f} {:1.3f} former = {:1.3f} {:1.3f} words/sec = {:4.2f} batchs_time = {:.2f} loss={:4.3f}'
-                              .format(epoch, batch_num, p1, p2, sp1, sp2, (batch_num - batch_new) * self.batch_size / (end - start),(end - start) / 60,
+                        print('epoch,batch={:2d} {}:  pearsonr={:1.3f} {:1.3f}  words/sec = {:4.2f} batchs_time = {:.2f} loss={:4.3f}'
+                              .format(epoch, batch_num, p1, p2, (batch_num - batch_new) * self.batch_size / (end - start),(end - start) / 60,
                                       losses.avg))
                     else:
                         print(
@@ -157,10 +156,9 @@ class word2vec:
                 batch_num = batch_num + 1
             if self.language == 'english':
                 word_embeddings = self.model.input_embeddings()
-                sp1, sp2 = scorefunction(word_embeddings)
                 p1, p2 = self.wordsim()
                 print('epoch {}\t'
-                      'pearsonr: {:.6f} {:.6f} eval2: {:.6f} {:.6f} '.format(epoch, p1, p2, sp1, sp2))
+                      'pearsonr: {:.6f} {:.6f} '.format(epoch, p1, p2))
                 if p1 > best_p:
                     best_p = p1
                     torch.save({'state_dict': self.model.state_dict(),

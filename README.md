@@ -12,6 +12,7 @@ text8、simtext2 —— the data files, "simtext2" is smaller.
 If you encounter the problem _"RuntimeWarning: divide by zero encountered in true_divide
   sampling_p = (np.sqrt(fre_np / 0.001) + 1) * 0.001 / fre_np"_, you should probably consider decreasing the value of vacabulary_size(for example 1000), because you may be using smaller dataset. 
 ## Results
+
 The results of english text are as follow, the chinese word vectors are still be training. 
 
 | task        |   this repo   |  [**CCL2017 paper**](https://link.springer.com/chapter/10.1007/978-3-319-69005-6_4)  |
