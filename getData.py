@@ -11,6 +11,7 @@ from numba import jit
 
 class Options(object):
     def __init__(self, filepath, vocab_size, window_size, neg_sample_cnt, language, batch_size):
+        print('5000')
         with open(filepath, 'r', encoding='UTF-8') as f:
             words = f.read().split()  # 17005207 words
         self.dict_path = 'word2idx.size' + str(vocab_size)
@@ -107,9 +108,6 @@ class Options(object):
         # context = np.ndarray(shape=(batch_size, 2 * window_size), dtype=np.int64)
         # labels = np.ndarray(shape=(batch_size), dtype=np.int64)
 
-        if self.data_index + span > self.data_len:
-            self.data_index = 0
-            self.process = False
         buffer = data[self.data_index:self.data_index + span]
         pos_u = []
         pos_v = []
@@ -124,9 +122,8 @@ class Options(object):
                 self.process = False
             else:
                 buffer = data[self.data_index:self.data_index + span]
-
             for j in range(span - 1):
-                pos_u.append(self.labels[i])
+                pos_u.append(self.labels[i]) #
                 pos_v.append(self.context[i, j])
         neg_v = np.random.choice(self.sampling_table, size=(batch_size * 2 * window_size, count))
         return np.array(pos_u), np.array(pos_v), neg_v
@@ -138,7 +135,7 @@ class Options(object):
         labels = np.ndarray(shape=(batch_size), dtype=np.int64)
 
         pos_u = []
-        pos_v = []
+        pos_v = []#
         end_idx = self.data_index + batch_size + span
         if end_idx >= self.data_len:
             self.data_index = 0

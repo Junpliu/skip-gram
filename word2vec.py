@@ -78,7 +78,7 @@ class word2vec:
         best_p = 0
         global best_loss
         best_loss = 1000000000
-        start_batch = 0
+        start_index = 0
 
         if len(self.checkpoint) != 0:
             print('load checkpoint from ' + self.checkpoint)
@@ -92,45 +92,39 @@ class word2vec:
                 best_loss = checkpoint['best_loss']
             else:
                 print('pretrained model has not key \'best_loss\'! ')
-            if 'batch_num' in checkpoint.keys():
-                start_batch = checkpoint['batch_num']
-                self.op.data_index = start_batch
+            if 'start_index' in checkpoint.keys():
+                start_index = checkpoint['start_index']
+                self.op.data_index = start_index
             else:
-                print('pretrained model has not key \'start_batch\'! ')
-            print('epoch :{}, batch {}'.format(start_epoch, start_batch))
+                print('pretrained model has not key \'start_index\'! ')
+            print('epoch :{}, batch {}, data index {}'.format(start_epoch, int(start_index / self.batch_size), start_index))
             self.model.load_state_dict(checkpoint['state_dict'])
-            # try:
-            #     optimizer.load_state_dict(checkpoint['optimizer'])
-            # except:
-            #     print('error loading state dict of optim')
+            optimizer.load_state_dict(checkpoint['optimizer'])
         losses = AverageMeter()
         # start_epoch = 0
-        print('start epoch ', start_epoch, ' start batch', start_batch)
+        print('start epoch ', start_epoch, ' start batch', int(start_index / self.batch_size), 'start index', start_index)
         for epoch in range(start_epoch, self.epoch_num):
             start = time.time()
             self.op.process = True
             batch_num = 0
-            if start_batch != 0:
-                batch_num = start_batch
+            if epoch == start_epoch and start_index != 0:
+                batch_num = int(start_index / self.batch_size)
             batch_new = batch_num
             losses.reset()
             while self.op.process:
-                # pos_u, pos_v, neg_v = self.op.generate_batch(self.windows_size, self.batch_size, self.neg_sample_num)
-                pos_u, pos_v, neg_v = self.op.iter_batch(self.windows_size, self.batch_size, self.neg_sample_num)
+                pos_u, pos_v, neg_v = self.op.generate_batch(self.windows_size, self.batch_size, self.neg_sample_num)
+                # pos_u, pos_v, neg_v = self.op.iter_batch(self.windows_size, self.batch_size, self.neg_sample_num)
+
                 pos_u = torch.LongTensor(pos_u)
                 pos_v = torch.LongTensor(pos_v)
                 neg_v = torch.LongTensor(neg_v)
-
                 optimizer.zero_grad()
                 loss = self.model(pos_u, pos_v, neg_v, self.batch_size)
                 losses.update(loss.item(), pos_u.shape[0])
                 loss.backward()
-
                 optimizer.step()
 
-                # if batch_num % 30000 == 0:
-                #     torch.save(model.state_dict(), './tmp/skipgram.epoch{}.batch{}'.format(epoch, batch_num))
-                if batch_num % 5000 == 0:  #
+                if batch_num % 5000 == 0: #
                     end = time.time()
                     if self.language == 'english':
                         word_embeddings = self.model.input_embeddings()
@@ -140,18 +134,18 @@ class word2vec:
                                       losses.avg))
                     else:
                         print(
-                            'epoch,batch={:2d} {}:  words/sec = {:4.2f} batchs_time = {:.2f} loss={:4.3f}'
+                            'epoch,batch={:2d} {}:  words/sec = {:4.2f} batchs_time = {:.2f} loss={:4.3f} data_index = {}'
                                 .format(epoch, batch_num,
                                         (batch_num - batch_new) * self.batch_size / (end - start),
                                         (end - start) / 60,
-                                        losses.avg))
+                                        losses.avg, self.op.data_index))
                         if losses.avg < best_loss:
                             best_loss = losses.avg
                             torch.save({'state_dict': self.model.state_dict(),
                                         'best_loss': best_loss,
                                         'optimizer': optimizer.state_dict(),
                                         'epoch': epoch,
-                                        'batch_num': batch_num + 1},
+                                        'start_index': self.op.data_index},
                                        './checkpoints/chinese/epoch{}_optim{}_lr{}_input{}'.format(epoch, self.optim, self.lr, self.inputfile[-9]))
                     batch_new = batch_num
                     start = time.time()
@@ -172,11 +166,12 @@ class word2vec:
                       'loss: {:.6f} '.format(epoch, best_loss))
                 if losses.avg < best_loss:
                     best_loss = losses.avg
-                    torch.save({'state_dict': self.model.state_dict(),
-                                'best_loss': best_loss,
-                                'optimizer': optimizer.state_dict(),
-                                'epoch': epoch + 1},
-                               './checkpoints/chinese/epoch{}'.format(epoch, batch_num, self.lr))
+                torch.save({'state_dict': self.model.state_dict(),
+                            'best_loss': best_loss,
+                            'optimizer': optimizer.state_dict(),
+                            'epoch': epoch + 1,
+                            'start_index': self.op.data_index},
+                           './checkpoints/chinese/epoch{}'.format(epoch, batch_num, self.lr))
         print("Optimization Finished!")
 
     def wordsim(self): #
@@ -258,7 +253,7 @@ parser.add_argument('--inputfile', type=str, default='../../wiki_zh_main')  # '.
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    print('adam optim not load optim') #
+    print('epoch save') #
     if args.language != 'chinese' and args.language != 'english':
         input('error language option! ')
     wc = word2vec(inputfile=args.inputfile, checkpoint=args.checkpoint, test_only=args.testonly, language=args.language, lr=args.lr, batch_size=args.batch_size, vocabulary_size=args.vocabsize, optim=args.optim)
